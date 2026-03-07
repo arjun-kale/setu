@@ -84,6 +84,18 @@ def test_schemes_detail():
         print("GET /api/schemes/{id} -> OK (endpoint exists, 404 when not found)")
 
 
+def test_check_eligibility():
+    r = client.post(
+        "/api/check-eligibility",
+        json={"age": 25, "income": 100000, "state": "MH", "occupation": "farmer"},
+    )
+    assert r.status_code == 200
+    data = r.json()
+    assert "schemes" in data
+    assert isinstance(data["schemes"], list)
+    print("POST /api/check-eligibility -> OK (schemes list)")
+
+
 def main():
     print("Testing backend features...\n")
     try:
@@ -94,6 +106,7 @@ def main():
         test_chat()
         test_schemes_list()
         test_schemes_detail()
+        test_check_eligibility()
         print("\nAll feature checks passed.")
         return 0
     except AssertionError as e:

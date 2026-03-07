@@ -53,3 +53,21 @@ class SchemeListResponse(BaseModel):
     """GET /api/schemes response."""
 
     schemes: list[SchemeOut]
+
+
+# --- Eligibility check ---
+
+
+class CheckEligibilityRequest(BaseModel):
+    """POST /api/check-eligibility body."""
+
+    age: int | None = Field(None, ge=0, le=120, description="User age")
+    income: float | None = Field(None, ge=0, description="Annual income")
+    state: str | None = Field(None, description="State (e.g. MH, KA)")
+    occupation: str | None = Field(None, description="Occupation (e.g. farmer, student)")
+
+
+class CheckEligibilityResponse(BaseModel):
+    """POST /api/check-eligibility response."""
+
+    schemes: list[SchemeOut] = Field(default_factory=list, description="Matching schemes")
