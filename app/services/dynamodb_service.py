@@ -6,6 +6,7 @@ Region: ap-south-1 (configurable via DYNAMODB_REGION).
 
 import time
 import uuid
+from decimal import Decimal
 from typing import Any, Optional
 
 import boto3
@@ -213,16 +214,31 @@ class DynamoDBService:
 
     # --- User profiles ---
 
+    def get_user_profile(self, user_id: str) -> Optional[dict[str, Any]]:
+        """Get user profile (age, income, state, occupation, etc.). Returns None if not found."""
+        try:
+            r = self._user_profiles_table().get_item(Key={"user_id": user_id})
+            return r.get("Item")
+        except ClientError:
+            return None
+
     def update_user_profile(self, user_id: str, **profile_data: Any) -> dict[str, Any]:
         """Create or update user profile. Merges with existing. Pass age, income, state, occupation, etc."""
         now = str(int(time.time()))
         table = self._user_profiles_table()
+        # DynamoDB requires Decimal for numbers, not float
+        safe_data = {}
+        for k, v in profile_data.items():
+            if isinstance(v, float):
+                safe_data[k] = Decimal(str(v))
+            else:
+                safe_data[k] = v
         try:
             r = table.get_item(Key={"user_id": user_id})
             existing = r.get("Item") or {}
         except ClientError:
             existing = {}
-        existing.update(profile_data)
+        existing.update(safe_data)
         existing["user_id"] = user_id
         existing["updated_at"] = now
         if "created_at" not in existing:

@@ -1,11 +1,14 @@
 """Scheme discovery API: GET /api/schemes, GET /api/schemes/{id}. Data from PostgreSQL."""
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session, joinedload
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.config.database import get_db_session
 from app.models.scheme import Scheme
 from app.models.schemas import EligibilityRuleOut, SchemeListResponse, SchemeOut
+from app.services.scheme_service import search_schemes
+from sqlalchemy.orm import Session, joinedload
 
 router = APIRouter()
 
@@ -30,15 +33,13 @@ def _scheme_to_out(scheme: Scheme) -> SchemeOut:
 
 
 @router.get("", response_model=SchemeListResponse)
-def list_schemes(db: Session = Depends(get_db_session)) -> SchemeListResponse:
-    """List all schemes with name, description, benefits, eligibility rules."""
-    schemes = (
-        db.query(Scheme)
-        .options(joinedload(Scheme.eligibility))
-        .order_by(Scheme.id)
-        .all()
-    )
-    return SchemeListResponse(schemes=[_scheme_to_out(s) for s in schemes])
+def list_schemes(
+    db: Session = Depends(get_db_session),
+    q: Optional[str] = Query(None, description="Search by keyword in name, description, benefits"),
+) -> SchemeListResponse:
+    """List schemes. Use ?q=farmer to search by keyword."""
+    schemes = search_schemes(db, query=q, limit=50)
+    return SchemeListResponse(schemes=schemes)
 
 
 @router.get("/{scheme_id}", response_model=SchemeOut)

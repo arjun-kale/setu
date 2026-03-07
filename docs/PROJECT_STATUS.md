@@ -116,21 +116,18 @@
 
 ## 5. What's Remaining to Build
 
-| Feature | Priority | Description |
-|---------|----------|-------------|
-| **Intent detection** | High | Classify message: chat vs scheme_search vs eligibility_check |
-| **Real AI** | High | Replace mock AI with LangGraph + RAG (Pinecone) |
-| **WhatsApp webhook** | Medium | `POST /webhooks/whatsapp` (Twilio) → same chat flow |
-| **S3 audio storage** | Low | Store voice input/output in S3 (optional) |
-| **Skill learning flow** | Low | Dedicated flow for learning content |
-| **Auth** | Medium | User login/register if needed (frontend + backend) |
+See **`docs/BUILD_PLAN.md`** for full plan.
 
-### Suggested Order
+| # | Feature | Owner |
+|---|---------|-------|
+| 1 | Intent detection | Us |
+| 2 | S3 audio storage | Us |
+| 3 | Auth | Us |
+| 4 | Skill learning flow | Us |
+| 5 | Twilio WhatsApp webhook | Us (last) |
+| — | LangGraph + RAG | Friend |
 
-1. **Intent detection** — Route messages to chat vs scheme vs eligibility
-2. **Real AI (LangGraph + RAG)** — Replace mock with real answers
-3. **WhatsApp webhook** — Twilio integration
-4. **Auth** — If required for production
+**Order:** Intent → S3 → Auth → Skill learning → Twilio (last). LangGraph/RAG excluded (friend).
 
 ---
 

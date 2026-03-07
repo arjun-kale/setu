@@ -71,3 +71,47 @@ class CheckEligibilityResponse(BaseModel):
     """POST /api/check-eligibility response."""
 
     schemes: list[SchemeOut] = Field(default_factory=list, description="Matching schemes")
+
+
+# --- Auth ---
+
+
+class RegisterRequest(BaseModel):
+    """POST /api/auth/register body."""
+
+    email: str = Field(..., min_length=1)
+    password: str = Field(..., min_length=6)
+    name: str | None = Field(None)
+
+
+class RegisterResponse(BaseModel):
+    user_id: str
+    email: str
+    token: str
+    message: str
+
+
+class LoginRequest(BaseModel):
+    """POST /api/auth/login body."""
+
+    email: str = Field(..., min_length=1)
+    password: str = Field(..., min_length=1)
+
+
+class LoginResponse(BaseModel):
+    user_id: str
+    email: str
+    token: str
+    message: str
+
+
+# --- User profile ---
+
+
+class UpdateProfileRequest(BaseModel):
+    """PUT /api/users/{user_id}/profile body."""
+
+    age: int | None = Field(None, ge=0, le=120)
+    income: float | None = Field(None, ge=0)
+    state: str | None = None
+    occupation: str | None = None

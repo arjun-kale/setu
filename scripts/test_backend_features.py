@@ -96,6 +96,117 @@ def test_check_eligibility():
     print("POST /api/check-eligibility -> OK (schemes list)")
 
 
+def test_chat_scheme_intent():
+    """Chat with scheme_search intent returns scheme list."""
+    r = client.post(
+        "/api/chat",
+        json={"user_id": "test-intent-1", "message": "What schemes are available for farmers?", "language": "en"},
+    )
+    assert r.status_code == 200
+    data = r.json()
+    assert "response" in data
+    # Should get scheme search result (list or "no schemes")
+    assert len(data["response"]) > 0
+    print("POST /api/chat (scheme intent) -> OK")
+
+
+def test_chat_eligibility_intent():
+    """Chat with eligibility_check intent returns helpful message or schemes."""
+    r = client.post(
+        "/api/chat",
+        json={"user_id": "test-intent-2", "message": "Am I eligible for any scheme?", "language": "en"},
+    )
+    assert r.status_code == 200
+    data = r.json()
+    assert "response" in data
+    assert len(data["response"]) > 0
+    print("POST /api/chat (eligibility intent) -> OK")
+
+
+def test_schemes_search():
+    """GET /api/schemes?q=farmer returns filtered list."""
+    r = client.get("/api/schemes?q=farmer")
+    assert r.status_code == 200
+    data = r.json()
+    assert "schemes" in data
+    assert isinstance(data["schemes"], list)
+    print("GET /api/schemes?q=farmer -> OK")
+
+
+def test_auth_register_login():
+    """Register and login return token."""
+    import uuid
+    email = f"test-{uuid.uuid4().hex[:8]}@example.com"
+    r = client.post("/api/auth/register", json={"email": email, "password": "test123", "name": "Test"})
+    assert r.status_code == 200
+    data = r.json()
+    assert "token" in data and data["email"] == email
+    r2 = client.post("/api/auth/login", json={"email": email, "password": "test123"})
+    assert r2.status_code == 200
+    assert "token" in r2.json()
+    print("POST /api/auth/register, /api/auth/login -> OK")
+
+
+def test_auth_login_invalid():
+    """Login with wrong password returns 401."""
+    r = client.post("/api/auth/login", json={"email": "nonexistent@x.com", "password": "wrong"})
+    assert r.status_code == 401
+    print("POST /api/auth/login (invalid) -> OK (401)")
+
+
+def test_skills_list():
+    """GET /api/skills returns learning topics."""
+    r = client.get("/api/skills")
+    assert r.status_code == 200
+    data = r.json()
+    assert "skills" in data and len(data["skills"]) > 0
+    print("GET /api/skills -> OK")
+
+
+def test_skills_detail():
+    """GET /api/skills/1 returns one skill."""
+    r = client.get("/api/skills/1")
+    assert r.status_code == 200
+    data = r.json()
+    assert "title" in data and "content" in data
+    print("GET /api/skills/1 -> OK")
+
+
+def test_chat_skill_intent():
+    """Chat with skill_learning intent returns skill content."""
+    r = client.post(
+        "/api/chat",
+        json={"user_id": "test-skill", "message": "I want to learn digital skills", "language": "en"},
+    )
+    assert r.status_code == 200
+    data = r.json()
+    assert "response" in data and len(data["response"]) > 0
+    print("POST /api/chat (skill intent) -> OK")
+
+
+def test_update_profile():
+    """PUT /api/users/{user_id}/profile updates profile."""
+    r = client.put(
+        "/api/users/test-profile-user/profile",
+        json={"age": 30, "income": 150000, "state": "MH", "occupation": "farmer"},
+    )
+    assert r.status_code == 200
+    data = r.json()
+    assert "Profile updated" in data.get("message", "")
+    print("PUT /api/users/{id}/profile -> OK")
+
+
+def test_whatsapp_webhook():
+    """POST /webhooks/whatsapp accepts Twilio webhook format."""
+    r = client.post(
+        "/webhooks/whatsapp",
+        data={"From": "whatsapp:+919999999999", "Body": "Hello"},
+    )
+    assert r.status_code == 200
+    assert r.json().get("status") == "ok"
+    print("POST /webhooks/whatsapp -> OK")
+
+
 def test_voice_empty():
     """POST /api/voice with empty audio returns 400."""
     r = client.post(
@@ -116,9 +227,19 @@ def main():
         test_health_db()
         test_health_dynamo()
         test_chat()
+        test_chat_scheme_intent()
+        test_chat_eligibility_intent()
         test_schemes_list()
+        test_schemes_search()
         test_schemes_detail()
         test_check_eligibility()
+        test_auth_register_login()
+        test_auth_login_invalid()
+        test_skills_list()
+        test_skills_detail()
+        test_chat_skill_intent()
+        test_update_profile()
+        test_whatsapp_webhook()
         test_voice_empty()
         print("\nAll feature checks passed.")
         return 0

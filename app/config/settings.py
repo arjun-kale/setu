@@ -64,6 +64,11 @@ class Settings(BaseSettings):
     # Amazon Polly voice (optional)
     polly_voice_id: str = Field(default="Joanna", alias="POLLY_VOICE_ID")
 
+    # Auth (JWT)
+    jwt_secret: str = Field(default="change-me-in-production", alias="JWT_SECRET")
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    jwt_expire_hours: int = Field(default=24, alias="JWT_EXPIRE_HOURS")
+
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",
