@@ -43,3 +43,20 @@ def health_db() -> dict[str, Any]:
         "database": db_status,
         "timestamp": datetime.utcnow().isoformat() + "Z",
     }
+
+
+@router.get("/health/dynamo", response_model=dict[str, Any])
+def health_dynamo() -> dict[str, Any]:
+    """Check DynamoDB connectivity (sessions table exists and reachable)."""
+    try:
+        from app.services.dynamodb_client import get_sessions_table
+        table = get_sessions_table()
+        table.table_status
+        dynamo_status = "ok"
+    except Exception as e:
+        dynamo_status = f"error: {e!s}"
+    return {
+        "status": "healthy" if dynamo_status == "ok" else "degraded",
+        "dynamodb": dynamo_status,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+    }

@@ -1,52 +1,75 @@
-"""PostgreSQL models for government schemes and eligibility rules."""
+"""PostgreSQL models for government schemes, eligibility, and documents."""
 
-from datetime import datetime
-
-from sqlalchemy import JSON, Column, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from app.config.database import Base
 
 
 class Scheme(Base):
-    """Government scheme — metadata and display info."""
+    """Government scheme — id, name, description, benefits."""
 
     __tablename__ = "schemes"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(255), nullable=False, index=True)
-    slug = Column(String(255), unique=True, nullable=False, index=True)
     description = Column(Text, nullable=True)
-    category = Column(String(128), nullable=True, index=True)  # e.g. farmer, education, health
-    state = Column(String(64), nullable=True, index=True)  # null = national
-    source_url = Column(String(512), nullable=True)
-    is_active = Column(Integer, default=1)  # 1=active, 0=inactive
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    benefits = Column(Text, nullable=True)
 
-    eligibility_rules = relationship("EligibilityRule", back_populates="scheme", cascade="all, delete-orphan")
+    eligibility = relationship(
+        "SchemeEligibility",
+        back_populates="scheme",
+        cascade="all, delete-orphan",
+    )
+    documents = relationship(
+        "SchemeDocument",
+        back_populates="scheme",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return f"<Scheme(id={self.id}, name={self.name!r})>"
 
 
-class EligibilityRule(Base):
-    """Eligibility rules for a scheme (age, income, state, occupation)."""
+class SchemeEligibility(Base):
+    """Eligibility criteria for a scheme."""
 
-    __tablename__ = "eligibility_rules"
+    __tablename__ = "scheme_eligibility"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    scheme_id = Column(Integer, ForeignKey("schemes.id", ondelete="CASCADE"), nullable=False, index=True)
-    min_age = Column(Integer, nullable=True)
-    max_age = Column(Integer, nullable=True)
-    min_income = Column(Float, nullable=True)
-    max_income = Column(Float, nullable=True)
-    states = Column(JSON, nullable=True)  # list of state codes, e.g. ["MH", "KA"]; null = all
-    occupations = Column(JSON, nullable=True)  # list of occupation keywords; null = any
-    extra_criteria = Column(JSON, nullable=True)  # flexible key-value for other rules
-    created_at = Column(DateTime, default=datetime.utcnow)
+    scheme_id = Column(
+        Integer,
+        ForeignKey("schemes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    age_limit = Column(String(128), nullable=True)
+    income_limit = Column(String(128), nullable=True)
+    state = Column(String(128), nullable=True, index=True)
+    occupation = Column(String(255), nullable=True, index=True)
 
-    scheme = relationship("Scheme", back_populates="eligibility_rules")
+    scheme = relationship("Scheme", back_populates="eligibility")
 
     def __repr__(self) -> str:
-        return f"<EligibilityRule(id={self.id}, scheme_id={self.scheme_id})>"
+        return f"<SchemeEligibility(id={self.id}, scheme_id={self.scheme_id})>"
+
+
+class SchemeDocument(Base):
+    """Documents linked to a scheme."""
+
+    __tablename__ = "scheme_documents"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    scheme_id = Column(
+        Integer,
+        ForeignKey("schemes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    document_name = Column(String(255), nullable=False)
+    document_url = Column(String(512), nullable=True)
+
+    scheme = relationship("Scheme", back_populates="documents")
+
+    def __repr__(self) -> str:
+        return f"<SchemeDocument(id={self.id}, scheme_id={self.scheme_id})>"

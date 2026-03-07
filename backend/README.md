@@ -66,7 +66,7 @@ cd backend
 python scripts/create_tables.py
 ```
 
-This creates `schemes` and `eligibility_rules` in your database. Then run the app and check `GET /health/db`.
+This creates `schemes`, `scheme_eligibility`, and `scheme_documents` in your database. Then run the app and check `GET /health/db`.
 
 ## Planned integrations
 
