@@ -9,7 +9,7 @@ Full overview of **what was built**, **how it was built**, and the **workflow** 
 | Area | Status | What exists |
 |------|--------|-------------|
 | **Project context** | Done | `PROJECT_CONTEXT.md` — purpose, features, architecture |
-| **FastAPI app** | Done | `backend/app/main.py` — app, CORS, lifespan, route mount |
+| **FastAPI app** | Done | `app/main.py` — app, CORS, lifespan, route mount |
 | **Environment config** | Done | `.env` + `app/config/settings.py` — all required/optional vars |
 | **PostgreSQL** | Done | Models + DB connection; tables: `schemes`, `scheme_eligibility`, `scheme_documents` |
 | **DynamoDB** | Done | Two layers: legacy client (sessions/chat) + **DynamoDBService** (users, sessions, messages, user_profiles) |
@@ -34,46 +34,50 @@ Full overview of **what was built**, **how it was built**, and the **workflow** 
 ### 2.2 Repository layout
 
 ```
-Setu-Backend/
+setu-backend/
 ├── PROJECT_CONTEXT.md          # Product & architecture (single source of truth)
 ├── docs/
 │   ├── BUILD_OVERVIEW.md       # This file
-│   ├── GIT_WORKFLOW.md        # Branch strategy (main vs backend)
-│   └── GETTING_CREDENTIALS.md # How to get AWS, Postgres, Twilio, Google keys
+│   ├── GIT_WORKFLOW.md        # Branch strategy
+│   ├── BACKEND_PLAN.md        # Phased implementation plan
+│   └── GETTING_CREDENTIALS.md  # How to get AWS, Postgres, Twilio, Google keys
 │
-└── backend/
-    ├── .env                    # Secrets (not committed)
-    ├── .env.example            # Template for required vars
-    ├── requirements.txt
-    ├── README.md
-    │
-    ├── app/
-    │   ├── main.py             # FastAPI app, CORS, lifespan, router
-    │   ├── config/
-    │   │   ├── settings.py     # Env-based settings (AWS, Postgres, S3, DynamoDB, Twilio, Google)
-    │   │   └── database.py     # SQLAlchemy engine, SessionLocal, Base, get_db_session
-    │   ├── routes/
-    │   │   ├── __init__.py     # api_router mounts
-    │   │   └── health.py       # /health, /health/db, /health/dynamo
-    │   ├── models/
-    │   │   ├── scheme.py       # Scheme, SchemeEligibility, SchemeDocument (Postgres)
-    │   │   ├── schemas.py      # Pydantic schemas (e.g. HealthResponse)
-    │   │   └── db.py           # Re-exports for models
-    │   ├── services/
-    │   │   ├── dynamodb_client.py   # Legacy: sessions + chat (rural_ai_sessions, rural_ai_chat_history)
-    │   │   ├── dynamodb_service.py  # Reusable class: users, sessions, messages, user_profiles (ap-south-1)
-    │   │   ├── scheme_service.py    # Placeholder (Postgres scheme/eligibility logic)
-    │   │   ├── s3_client.py         # Placeholder
-    │   │   ├── voice_service.py     # Placeholder (STT/TTS)
-    │   │   ├── whatsapp_service.py   # Placeholder (Twilio)
-    │   │   └── ai_agent.py          # Placeholder (LangGraph + RAG)
-    │   └── utils/
-    │       └── logging.py
-    │
-    └── scripts/
-        ├── create_tables.py              # Postgres: schemes, scheme_eligibility, scheme_documents
-        ├── create_dynamodb_tables.py     # DynamoDB legacy: rural_ai_sessions, rural_ai_chat_history
-        └── create_dynamodb_service_tables.py  # DynamoDB service: users, sessions, messages, user_profiles
+├── .env                        # Secrets (not committed)
+├── .env.example                # Template for required vars
+├── requirements.txt
+├── README.md
+│
+├── app/
+│   ├── main.py                 # FastAPI app, CORS, lifespan, router
+│   ├── config/
+│   │   ├── settings.py         # Env-based settings (AWS, Postgres, S3, DynamoDB, Twilio, Google)
+│   │   └── database.py        # SQLAlchemy engine, SessionLocal, Base, get_db_session
+│   ├── routes/
+│   │   ├── __init__.py        # api_router mounts
+│   │   ├── health.py          # /health, /health/db, /health/dynamo
+│   │   ├── chat.py            # POST /api/chat
+│   │   ├── schemes.py         # GET /api/schemes, /api/schemes/{id}
+│   │   └── eligibility.py     # POST /api/check-eligibility
+│   ├── models/
+│   │   ├── scheme.py          # Scheme, SchemeEligibility, SchemeDocument (Postgres)
+│   │   ├── schemas.py         # Pydantic schemas
+│   │   └── db.py              # Re-exports for models
+│   ├── services/
+│   │   ├── dynamodb_client.py   # Legacy: sessions + chat
+│   │   ├── dynamodb_service.py  # users, sessions, messages, user_profiles
+│   │   ├── scheme_service.py    # Postgres scheme/eligibility logic
+│   │   ├── s3_client.py        # S3 placeholder
+│   │   ├── voice_service.py    # STT/TTS placeholder
+│   │   ├── whatsapp_service.py  # Twilio placeholder
+│   │   └── ai_agent.py         # AI agent (mock)
+│   └── utils/
+│       └── logging.py
+│
+└── scripts/
+    ├── create_tables.py                  # Postgres: schemes, scheme_eligibility, scheme_documents
+    ├── create_dynamodb_tables.py         # DynamoDB legacy
+    ├── create_dynamodb_service_tables.py # DynamoDB service tables
+    └── test_backend_features.py          # Run all endpoint tests
 ```
 
 ---
@@ -233,9 +237,9 @@ DynamoDB (ap-south-1): users, sessions, messages, user_profiles
 | Need | Where |
 |------|--------|
 | Product/architecture | `PROJECT_CONTEXT.md` |
-| Build plan (phases) | `backend/docs/BACKEND_PLAN.md` |
+| Build plan (phases) | `docs/BACKEND_PLAN.md` |
 | Git (branch strategy) | `docs/GIT_WORKFLOW.md` |
-| Credentials (AWS, Postgres, Twilio, Google) | `backend/docs/GETTING_CREDENTIALS.md` |
+| Credentials (AWS, Postgres, Twilio, Google) | `docs/GETTING_CREDENTIALS.md` |
 | This overview | `docs/BUILD_OVERVIEW.md` |
 | Run backend | `cd backend && uvicorn app.main:app --reload` |
 | Create Postgres tables | `cd backend && python scripts/create_tables.py` |
