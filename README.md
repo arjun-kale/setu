@@ -1,59 +1,90 @@
-# AI Chatbot
+# Setu Backend — Rural AI Assistant
 
-A full-featured AI chatbot built with Next.js, the AI SDK, and PostgreSQL.
+Production-ready FastAPI backend for **Rural AI Assistant** (schemes, eligibility, voice, WhatsApp).
 
-## Features
+## Stack
 
-- **Next.js App Router** — Server components, server actions, and optimized routing
-- **AI SDK** — Unified API for generating text, structured objects, and tool calls with LLMs
-- **shadcn/ui + Tailwind CSS** — Clean, accessible UI components
-- **PostgreSQL** — Chat history and user data persistence
-- **Auth.js** — Secure authentication with credentials
-- **Artifacts** — Create and edit documents, code, and spreadsheets inline
-- **File uploads** — Image attachments stored locally
+| Component   | Technology |
+|------------|------------|
+| Framework  | FastAPI |
+| NoSQL      | Amazon DynamoDB (sessions, chat) |
+| SQL        | PostgreSQL (schemes, eligibility) |
+| Storage    | Amazon S3 (audio) |
+| Voice STT  | Google Speech-to-Text |
+| Voice TTS  | Amazon Polly |
+| Messaging  | Twilio WhatsApp API |
 
-## Getting Started
+## Requirements
 
-### Prerequisites
+- Python 3.9+
 
-- Node.js 18+
-- PostgreSQL database
-- OpenAI API key
-- pnpm
-
-### Setup
-
-1. Clone & install dependencies:
+## Setup
 
 ```bash
-pnpm install
+python -m venv .venv
+.venv\Scripts\activate   # Windows
+# source .venv/bin/activate  # Linux/macOS
+pip install -r requirements.txt
+cp .env.example .env
+# Edit .env with your values
 ```
 
-2. Copy `.env.example` to `.env.local` and fill in your values:
+## Run
 
 ```bash
-cp .env.example .env.local
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-3. Set up the database:
+- API: http://localhost:8000  
+- Docs: http://localhost:8000/docs  
+- Health: http://localhost:8000/health  
+
+## Project layout
+
+```
+├── app/
+│   ├── main.py           # FastAPI app, lifespan, CORS
+│   ├── config/           # Settings, database
+│   ├── routes/           # API routes (health, chat, schemes, eligibility)
+│   ├── services/         # DynamoDB, S3, scheme, voice, WhatsApp, AI agent
+│   ├── models/           # Pydantic schemas, SQLAlchemy models
+│   └── utils/            # Logging, helpers
+├── scripts/              # DB setup, table creation, tests
+├── docs/                 # Documentation
+├── requirements.txt
+├── .env.example
+└── README.md
+```
+
+## Database setup (PostgreSQL)
+
+After `.env` has a valid `POSTGRES_URL`:
 
 ```bash
-pnpm db:migrate
+python scripts/create_tables.py
 ```
 
-4. Start the dev server:
+This creates `schemes`, `scheme_eligibility`, and `scheme_documents` in your database. Then run the app and check `GET /health/db`.
+
+## DynamoDB setup
 
 ```bash
-pnpm dev
+python scripts/create_dynamodb_service_tables.py
 ```
 
-The app will be running at [localhost:3000](http://localhost:3000).
+## Test
 
-## Environment Variables
+```bash
+python scripts/test_backend_features.py
+```
 
-| Variable | Description |
-|----------|-------------|
-| `AUTH_SECRET` | Random secret for auth sessions (`openssl rand -base64 32`) |
-| `OPENAI_API_KEY` | Your OpenAI API key |
-| `POSTGRES_URL` | PostgreSQL connection string |
-| `REDIS_URL` | (Optional) Redis URL for resumable streams |
+## Planned integrations
+
+- **DynamoDB** — user sessions, chat history ✓
+- **PostgreSQL** — scheme data, eligibility rules ✓
+- **S3** — audio uploads and TTS output
+- **AI agents** — LangGraph + RAG (Pinecone)
+- **Voice** — Google STT, Amazon Polly
+- **WhatsApp** — Twilio webhook
+
+See `docs/BACKEND_PLAN.md` for phased tasks and `PROJECT_CONTEXT.md` for full context.
