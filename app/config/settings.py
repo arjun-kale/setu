@@ -52,8 +52,17 @@ class Settings(BaseSettings):
     twilio_auth_token: Optional[str] = Field(default=None, alias="TWILIO_AUTH_TOKEN")
     twilio_whatsapp_number: Optional[str] = Field(default=None, alias="TWILIO_WHATSAPP_NUMBER")
 
-    # Google Speech-to-Text (optional until you add key)
-    google_stt_api_key: Optional[str] = Field(default=None, alias="GOOGLE_STT_API_KEY")
+    # Speech-to-Text: whisper (free, local) or google (requires billing)
+    stt_provider: str = Field(default="whisper", alias="STT_PROVIDER")
+    whisper_model_size: str = Field(default="base", alias="WHISPER_MODEL_SIZE")
+
+    # Google Speech-to-Text (only when STT_PROVIDER=google)
+    google_application_credentials: Optional[str] = Field(
+        default=None, alias="GOOGLE_APPLICATION_CREDENTIALS"
+    )
+
+    # Amazon Polly voice (optional)
+    polly_voice_id: str = Field(default="Joanna", alias="POLLY_VOICE_ID")
 
     model_config = {
         "env_file": ".env",

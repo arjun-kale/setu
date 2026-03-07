@@ -16,9 +16,13 @@ python-dotenv>=1.0.0,<2.0
 pydantic>=2.5.0,<3.0
 pydantic-settings>=2.1.0,<3.0
 
+# Voice: Whisper (free STT), Polly via boto3 (TTS)
+faster-whisper>=1.0.0,<2.0
+
+# Optional: Google STT (when STT_PROVIDER=google, requires billing)
+# google-cloud-speech>=2.24.0,<3.0
+
 # Optional for future use (uncomment when needed):
 # twilio>=8.0.0
-# google-cloud-speech>=2.24.0
-# boto3  # Polly is part of boto3
 # langgraph
 # pinecone-client

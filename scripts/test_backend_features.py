@@ -96,6 +96,18 @@ def test_check_eligibility():
     print("POST /api/check-eligibility -> OK (schemes list)")
 
 
+def test_voice_empty():
+    """POST /api/voice with empty audio returns 400."""
+    r = client.post(
+        "/api/voice",
+        files={"audio": ("empty.wav", b"", "audio/wav")},
+        data={"user_id": "test-voice", "language": "en-IN"},
+    )
+    assert r.status_code == 400
+    assert "empty" in r.json().get("detail", "").lower() or "Empty" in str(r.json())
+    print("POST /api/voice (empty) -> OK (400 as expected)")
+
+
 def main():
     print("Testing backend features...\n")
     try:
@@ -107,6 +119,7 @@ def main():
         test_schemes_list()
         test_schemes_detail()
         test_check_eligibility()
+        test_voice_empty()
         print("\nAll feature checks passed.")
         return 0
     except AssertionError as e:

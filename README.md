@@ -39,6 +39,27 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - Docs: http://localhost:8000/docs  
 - Health: http://localhost:8000/health  
 
+## Voice API
+
+`POST /api/voice` — send audio, get AI response as speech:
+
+1. Accept audio upload (WAV, WebM, OGG, FLAC, MP3)
+2. Convert speech to text (**Whisper** — free, local, no API key)
+3. Process via chat service
+4. Convert response to speech (Amazon Polly)
+5. Return MP3 audio
+
+```bash
+curl -X POST http://localhost:8000/api/voice \
+  -F "audio=@recording.wav" \
+  -F "user_id=user123" \
+  -F "language=en-IN" \
+  -o response.mp3
+```
+
+**Speech-to-Text:** Uses **Whisper** (free, runs locally) by default. No Google Cloud or billing needed.  
+**Text-to-Speech:** AWS Polly (uses your existing AWS credentials).
+
 ## Project layout
 
 ```

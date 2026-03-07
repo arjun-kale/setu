@@ -1,5 +1,7 @@
 # Environment
 .env
+google-credentials.json
+*-credentials.json
 .venv/
 venv/
 env/
