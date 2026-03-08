@@ -1,9 +1,11 @@
-"""Chat API: POST /api/chat — session, store message, intent detection, response, store and return."""
+"""Chat API: POST /api/chat, GET /api/chat/history — session, store message, intent detection, response."""
 
-from fastapi import APIRouter, Depends
+from decimal import Decimal
+
+from fastapi import APIRouter, Depends, Query
 
 from app.config.database import get_db_session
-from app.models.schemas import ChatRequest, ChatResponse
+from app.models.schemas import ChatHistoryResponse, ChatMessageOut, ChatRequest, ChatResponse
 from app.services.dynamodb_service import DynamoDBService, get_dynamodb_service
 from app.services.message_handler import process_message
 from sqlalchemy.orm import Session
@@ -50,3 +52,33 @@ def chat(
 
     dynamo.save_message(session_id, "assistant", response)
     return ChatResponse(response=response, session_id=session_id)
+
+
+def _to_chat_message(item: dict) -> ChatMessageOut:
+    """Convert DynamoDB item to ChatMessageOut (handles Decimal)."""
+    created_at = item.get("created_at", "")
+    if isinstance(created_at, Decimal):
+        created_at = str(int(created_at))
+    elif not isinstance(created_at, str):
+        created_at = str(created_at)
+    return ChatMessageOut(
+        message_id=item.get("message_id", ""),
+        role=item.get("role", "user"),
+        content=item.get("content", ""),
+        created_at=created_at,
+    )
+
+
+@router.get("/chat/history", response_model=ChatHistoryResponse)
+def get_chat_history(
+    session_id: str = Query(..., min_length=1, description="Session ID (e.g. user_id or whatsapp:+91...)"),
+    limit: int = Query(default=50, ge=1, le=100, description="Max messages to return"),
+    dynamo: DynamoDBService = Depends(get_dynamodb_service),
+) -> ChatHistoryResponse:
+    """
+    Get chat history for a session.
+    Returns messages in chronological order (user and assistant).
+    """
+    items = dynamo.get_chat_history(session_id=session_id, limit=limit)
+    messages = [_to_chat_message(item) for item in items]
+    return ChatHistoryResponse(session_id=session_id, messages=messages)

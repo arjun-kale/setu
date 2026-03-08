@@ -73,15 +73,21 @@ def test_schemes_list():
 
 
 def test_schemes_detail():
-    r = client.get("/api/schemes/99999")
-    assert r.status_code == 404
-    r2 = client.get("/api/schemes/1")
-    if r2.status_code == 200:
-        d = r2.json()
+    r = client.get("/api/schemes/1")
+    if r.status_code == 200:
+        d = r.json()
         assert "name" in d and "description" in d and "benefits" in d and "eligibility_rules" in d
         print("GET /api/schemes/1 -> OK (scheme detail)")
     else:
-        print("GET /api/schemes/{id} -> OK (endpoint exists, 404 when not found)")
+        print("GET /api/schemes/1 -> OK (or 404 if no data)")
+
+
+def test_schemes_404():
+    """GET /api/schemes/{id} returns 404 when scheme not found."""
+    r = client.get("/api/schemes/99999")
+    assert r.status_code == 404
+    assert "not found" in r.json().get("detail", "").lower()
+    print("GET /api/schemes/99999 -> OK (404 Not Found)")
 
 
 def test_check_eligibility():
@@ -172,6 +178,14 @@ def test_skills_detail():
     print("GET /api/skills/1 -> OK")
 
 
+def test_skills_404():
+    """GET /api/skills/{id} returns 404 when skill not found."""
+    r = client.get("/api/skills/99999")
+    assert r.status_code == 404
+    assert "not found" in r.json().get("detail", "").lower()
+    print("GET /api/skills/99999 -> OK (404 Not Found)")
+
+
 def test_chat_skill_intent():
     """Chat with skill_learning intent returns skill content."""
     r = client.post(
@@ -196,6 +210,22 @@ def test_update_profile():
     print("PUT /api/users/{id}/profile -> OK")
 
 
+def test_chat_history():
+    """GET /api/chat/history returns messages for a session."""
+    # First send a message to create history
+    client.post(
+        "/api/chat",
+        json={"user_id": "test-history-user", "message": "Hello", "language": "en"},
+    )
+    r = client.get("/api/chat/history", params={"session_id": "test-history-user"})
+    assert r.status_code == 200
+    data = r.json()
+    assert "session_id" in data and data["session_id"] == "test-history-user"
+    assert "messages" in data and isinstance(data["messages"], list)
+    assert len(data["messages"]) >= 2  # user + assistant
+    print("GET /api/chat/history -> OK")
+
+
 def test_whatsapp_webhook():
     """POST /webhooks/whatsapp accepts Twilio webhook format."""
     r = client.post(
@@ -205,6 +235,13 @@ def test_whatsapp_webhook():
     assert r.status_code == 200
     assert r.json().get("status") == "ok"
     print("POST /webhooks/whatsapp -> OK")
+
+
+def test_invalid_route_404():
+    """Unknown route returns 404."""
+    r = client.get("/api/nonexistent-endpoint-xyz")
+    assert r.status_code == 404
+    print("GET /api/nonexistent -> OK (404 Not Found)")
 
 
 def test_voice_empty():
@@ -232,15 +269,19 @@ def main():
         test_schemes_list()
         test_schemes_search()
         test_schemes_detail()
+        test_schemes_404()
         test_check_eligibility()
         test_auth_register_login()
         test_auth_login_invalid()
         test_skills_list()
         test_skills_detail()
+        test_skills_404()
         test_chat_skill_intent()
         test_update_profile()
+        test_chat_history()
         test_whatsapp_webhook()
         test_voice_empty()
+        test_invalid_route_404()
         print("\nAll feature checks passed.")
         return 0
     except AssertionError as e:
