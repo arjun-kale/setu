@@ -27,6 +27,22 @@ class ChatResponse(BaseModel):
     session_id: str = Field(..., description="Session id used for this conversation")
 
 
+class ChatMessageOut(BaseModel):
+    """Single message in chat history."""
+
+    message_id: str = Field(..., description="Message ID")
+    role: str = Field(..., description="user or assistant")
+    content: str = Field(..., description="Message content")
+    created_at: str = Field(..., description="Timestamp")
+
+
+class ChatHistoryResponse(BaseModel):
+    """GET /api/chat/history response."""
+
+    session_id: str = Field(..., description="Session ID")
+    messages: list[ChatMessageOut] = Field(default_factory=list, description="Chat messages in chronological order")
+
+
 # --- Scheme discovery ---
 
 
