@@ -1,4 +1,4 @@
-"""Application settings loaded from environment variables via python-dotenv."""
+﻿"""Application settings loaded from environment variables via python-dotenv."""
 
 from functools import lru_cache
 from pathlib import Path
@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     dynamodb_table_chat: str = Field(
         default="rural_ai_chat_history", alias="DYNAMODB_TABLE_CHAT"
     )
-    # DynamoDB service (users, sessions, messages, user_profiles) — region ap-south-1
+    # DynamoDB service (users, sessions, messages, user_profiles) ΓÇö region ap-south-1
     dynamodb_region: str = Field(default="ap-south-1", alias="DYNAMODB_REGION")
     dynamodb_table_users: str = Field(default="users", alias="DYNAMODB_TABLE_USERS")
     dynamodb_table_messages: str = Field(
@@ -68,6 +68,11 @@ class Settings(BaseSettings):
     jwt_secret: str = Field(default="change-me-in-production", alias="JWT_SECRET")
     jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
     jwt_expire_hours: int = Field(default=24, alias="JWT_EXPIRE_HOURS")
+
+    # AI service (LangGraph/RAG ΓÇö set when AI team integrates)
+    ai_service_url: Optional[str] = Field(default=None, alias="AI_SERVICE_URL")
+    ai_service_enabled: bool = Field(default=False, alias="AI_SERVICE_ENABLED")
+    ai_service_timeout_sec: int = Field(default=30, ge=5, le=120, alias="AI_SERVICE_TIMEOUT_SEC")
 
     model_config = {
         "env_file": ".env",

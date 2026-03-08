@@ -1,4 +1,4 @@
-"""Unified message handler: intent detection + routing to scheme search, eligibility, or chat."""
+﻿"""Unified message handler: intent detection + routing to scheme search, eligibility, or chat."""
 
 from typing import Any, Optional
 
@@ -118,10 +118,12 @@ def process_message(
         return format_skills_for_chat()
 
     # chat (default)
+    user_profile = dynamo.get_user_profile(user_id)
     return get_ai_response(
         message,
         language=language,
         session_id=session_id,
         user_id=user_id,
         chat_history=chat_history or [],
+        user_profile=user_profile,
     )
