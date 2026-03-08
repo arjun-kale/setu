@@ -1,0 +1,6 @@
+# Force GitHub to recognize this as a Python project
+*.py linguist-detectable=true
+*.ts linguist-detectable=false
+*.tsx linguist-detectable=false
+*.js linguist-detectable=false
+*.jsx linguist-detectable=false
