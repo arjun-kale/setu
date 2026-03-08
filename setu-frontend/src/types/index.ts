@@ -55,3 +55,40 @@ export interface Scheme {
   category: string;
   state?: string;
 }
+
+// ─── Backend-aligned types ──────────────────────────────
+
+export interface EligibilityRuleOut {
+  age_limit: string | null;
+  income_limit: string | null;
+  state: string | null;
+  occupation: string | null;
+}
+
+export interface SchemeOut {
+  id: number;
+  name: string;
+  description: string | null;
+  benefits: string | null;
+  eligibility_rules: EligibilityRuleOut[];
+}
+
+export interface BackendMessage {
+  response: string;
+  session_id: string;
+}
+
+export interface SkillOut {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  topics: string[];
+}
+
+export interface EligibilityRequest {
+  age?: number | null;
+  income?: number | null;
+  state?: string | null;
+  occupation?: string | null;
+}

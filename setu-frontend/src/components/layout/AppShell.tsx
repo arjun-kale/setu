@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import InputBar from "@/components/chat/InputBar";
 import { useChatStore } from "@/store/chatStore";
 import type { Message } from "@/types";
+import { sendMessage } from "@/lib/api";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 
@@ -14,9 +15,9 @@ interface AppShellProps {
 
 export default function AppShell({ children, sessionId }: AppShellProps) {
   const router = useRouter();
-  const { activeSessionId, addMessage, createSession } = useChatStore();
+  const { activeSessionId, addMessage, replaceMessage, createSession } = useChatStore();
 
-  const handleSendText = (text: string) => {
+  const handleSendText = async (text: string) => {
     let targetSessionId = activeSessionId;
 
     if (!targetSessionId) {
@@ -24,6 +25,7 @@ export default function AppShell({ children, sessionId }: AppShellProps) {
       router.push(`/chat/${targetSessionId}`);
     }
 
+    // Optimistic user message
     const userMessage: Message = {
       id: `msg-${Date.now()}`,
       role: "user",
@@ -31,22 +33,47 @@ export default function AppShell({ children, sessionId }: AppShellProps) {
       content: text,
       timestamp: new Date(),
     };
-
     addMessage(targetSessionId, userMessage);
 
-    // Simulate loading assistant reply
-    const loadingMessage: Message = {
-      id: `msg-${Date.now()}-loading`,
+    // Loading placeholder
+    const loadingId = `msg-${Date.now() + 1}-loading`;
+    addMessage(targetSessionId, {
+      id: loadingId,
       role: "assistant",
       type: "text",
       content: "",
       isLoading: true,
       timestamp: new Date(),
       agent: "bhasha_general",
-    };
-    addMessage(targetSessionId, loadingMessage);
+    });
 
-    console.log("[SETU] Sending to backend:", text);
+    try {
+      const data = await sendMessage({
+        user_id: "demo-user-001",
+        message: text,
+        language: "hi",
+      });
+
+      replaceMessage(targetSessionId, loadingId, {
+        id: loadingId,
+        role: "assistant",
+        type: "text",
+        content: data.response,
+        isLoading: false,
+        timestamp: new Date(),
+        agent: "bhasha_general",
+      });
+    } catch (err) {
+      replaceMessage(targetSessionId, loadingId, {
+        id: loadingId,
+        role: "assistant",
+        type: "text",
+        content: "माफ करें, कुछ गलत हुआ। कृपया दोबारा कोशिश करें।",
+        isLoading: false,
+        timestamp: new Date(),
+      });
+      console.error("[SETU] sendMessage error:", err);
+    }
   };
 
   const handleSendVoice = (blob: Blob) => {

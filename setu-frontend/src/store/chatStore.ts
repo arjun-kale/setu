@@ -8,6 +8,7 @@ interface ChatStore {
 
   setActiveSession: (id: string) => void;
   addMessage: (sessionId: string, message: Message) => void;
+  replaceMessage: (sessionId: string, messageId: string, newMessage: Message) => void;
   setMessageLoading: (
     sessionId: string,
     messageId: string,
@@ -48,6 +49,16 @@ export const useChatStore = create<ChatStore>((set) => ({
         ...state.messages,
         [sessionId]: (state.messages[sessionId] ?? []).map((m) =>
           m.id === messageId ? { ...m, isLoading: loading } : m
+        ),
+      },
+    })),
+
+  replaceMessage: (sessionId, messageId, newMessage) =>
+    set((state) => ({
+      messages: {
+        ...state.messages,
+        [sessionId]: (state.messages[sessionId] ?? []).map((m) =>
+          m.id === messageId ? newMessage : m
         ),
       },
     })),
